@@ -2,7 +2,7 @@ from pathlib import Path
 import csv
 
 # Change this to your dataset folder
-BASE_PATH = Path("path/to/your/data")
+BASE_PATH = Path("soundfiles/ESC50/rain")
 
 # Change this if you want the renamed files copied somewhere else
 # If None, files are renamed in-place
