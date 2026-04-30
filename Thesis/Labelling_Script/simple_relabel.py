@@ -3,7 +3,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 
 # Change only this folder
-BASE_PATH = SCRIPT_DIR.parent.parent / "soundfiles" / "ESC50" / "crying_baby"
+BASE_PATH = SCRIPT_DIR.parent.parent / "soundfiles" / "ESC50" / "laughing"
 
 # Automatically becomes "wind", "rain", "thunder", etc.
 LABEL_SUFFIX = BASE_PATH.name
