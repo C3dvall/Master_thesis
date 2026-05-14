@@ -4,8 +4,8 @@
 #include "hardware/irq.h"
 
 // ===== USER CONFIG =====
-#define MIC_PIN        A2
-#define SAMPLE_RATE    44100
+#define MIC_PIN        A0
+#define SAMPLE_RATE    16000
 #define RECORD_SECONDS 5
 #define TOTAL_SAMPLES  (SAMPLE_RATE * RECORD_SECONDS)
 
@@ -20,11 +20,12 @@ void dma_handler() {
     dma_done = true;
 }
 
-// ===== MICROPHONE SELF-TEST =====
+// ===== MICROPHONE SELF TEST =====
 bool testMic() {
     Serial.println("[TEST] Checking microphone...");
 
     long sum = 0;
+
     for (int i = 0; i < 200; i++) {
         int v = analogRead(MIC_PIN);
         sum += v;
@@ -32,6 +33,7 @@ bool testMic() {
     }
 
     int avg = sum / 200;
+
     Serial.printf("[TEST] Mic average level: %d\n", avg);
 
     if (avg < 200 || avg > 4000) {
@@ -43,52 +45,29 @@ bool testMic() {
     return true;
 }
 
-// ===== SEND EI HEADER =====
+// ===== SEND EDGE IMPULSE HEADER =====
 void sendEIHeader() {
+
     Serial.println(
         "{\"protected\":{\"ver\":\"v1\"},"
         "\"payload\":{"
         "\"device_name\":\"rp2040-mic\","
         "\"device_type\":\"custom\","
-        "\"interval_ms\":0.0226757,"
+        "\"interval_ms\":0.0625,"
         "\"sensors\":[{\"name\":\"audio\",\"units\":\"raw\"}]"
         "}}"
     );
 }
 
-// ===== SETUP =====
-void setup() {
-    Serial.begin(115200);
-    delay(1500);
+// ===== SETUP ADC + DMA =====
+void setupADC_DMA() {
 
-    Serial.println("\n=== RP2040 44.1 kHz DMA Audio Recorder ===");
-
-    // Allocate buffer
-    audioBuffer = (int16_t*) malloc(TOTAL_SAMPLES * sizeof(int16_t));
-    if (!audioBuffer) {
-        Serial.println("[FATAL] Failed to allocate audio buffer");
-        while (true) delay(1000);
-    }
-
-    // Init ADC
     adc_init();
     adc_gpio_init(MIC_PIN);
-    adc_select_input(0); // A0 = ADC0
-
-    if (!testMic()) {
-        Serial.println("[FATAL] Microphone test failed");
-        while (true) delay(1000);
-    }
-
-    sendEIHeader();
-    Serial.println("[INFO] Ready to record");
-}
-
-// ===== RECORD FUNCTION =====
-void recordAudio() {
-    Serial.println("[INFO] Starting 5-second recording...");
+    adc_select_input(0);
 
     dma_chan = dma_claim_unused_channel(true);
+
     dma_channel_config cfg = dma_channel_get_default_config(dma_chan);
 
     channel_config_set_transfer_data_size(&cfg, DMA_SIZE_16);
@@ -115,33 +94,90 @@ void recordAudio() {
 
     adc_set_clkdiv(48000000.0 / SAMPLE_RATE);
 
-    dma_done = false;
     dma_channel_set_irq0_enabled(dma_chan, true);
+
     irq_set_exclusive_handler(DMA_IRQ_0, dma_handler);
     irq_set_enabled(DMA_IRQ_0, true);
+}
+
+// ===== RECORD AUDIO =====
+void recordAudio() {
+
+    dma_done = false;
+
+    dma_channel_set_write_addr(
+        dma_chan,
+        audioBuffer,
+        false
+    );
+
+    dma_channel_set_trans_count(
+        dma_chan,
+        TOTAL_SAMPLES,
+        false
+    );
 
     adc_run(true);
+
     dma_channel_start(dma_chan);
 
-    while (!dma_done) {}
+    while (!dma_done) {
+    }
 
     adc_run(false);
-    adc_fifo_drain();
 
-    Serial.println("[INFO] Recording complete!");
+    adc_fifo_drain();
+}
+
+// ===== STREAM TO EDGE IMPULSE =====
+void streamToEI() {
+
+    for (int i = 0; i < TOTAL_SAMPLES; i++) {
+
+        Serial.println(audioBuffer[i]);
+    }
+}
+
+// ===== SETUP =====
+void setup() {
+
+    Serial.begin(115200);
+
+    delay(2000);
+
+    Serial.println("\n=== Continuous RP2040 Audio Stream ===");
+
+    audioBuffer = (int16_t*) malloc(
+        TOTAL_SAMPLES * sizeof(int16_t)
+    );
+
+    if (!audioBuffer) {
+
+        Serial.println("[FATAL] Failed to allocate buffer");
+
+        while (true) {
+            delay(1000);
+        }
+    }
+
+    if (!testMic()) {
+
+        while (true) {
+            delay(1000);
+        }
+    }
+
+    setupADC_DMA();
+
+    sendEIHeader();
+
+    Serial.println("[INFO] Continuous streaming started");
 }
 
 // ===== MAIN LOOP =====
 void loop() {
-    delay(2000);
+
     recordAudio();
 
-    // Stream to Edge Impulse
-    for (int i = 0; i < TOTAL_SAMPLES; i++) {
-        Serial.print(audioBuffer[i]);
-        Serial.print(i < TOTAL_SAMPLES - 1 ? "," : "\n");
-    }
-
-    Serial.println("[INFO] Done streaming");
-    while (true) delay(1000);
+    streamToEI();
 }
