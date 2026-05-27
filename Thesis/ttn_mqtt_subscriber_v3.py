@@ -16,7 +16,7 @@ PORT   = 8883
 TOPIC  = f"v3/{TTN_APP_ID}/devices/+/up"
 
 RAW_CSV     = "raw_data.csv"
-DECODED_CSV = "transmission_data.csv"
+DECODED_CSV = "transmission_data-3.csv"
 
 RAW_COLUMNS = [
     "received_at",
