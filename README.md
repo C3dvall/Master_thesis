@@ -91,8 +91,8 @@ The sound classifier was built using Edge Impulse.
 
 - Mel Frequency Energy (MFE)
 - 16 kHz sampling
-- 5 second inference window
-- Embedded neural network
+- 2 second inference window
+- Embedded classification (Edge Impusle)
 
 ### Training Data
 
@@ -101,16 +101,13 @@ The model was trained using a combination of:
 - ESC-50
 - UrbanSound8K
 - Human Screaming Dataset
-- Custom field recordings collected in Malmö
 
 The final model classifies urban sounds such as:
 
 - Traffic
 - Construction
-- Weather
 - Human activity
-- Animals
-- Emergency sirens
+- Alarms
 
 ---
 
@@ -147,37 +144,10 @@ No raw audio is stored or uploaded.
 
 ---
 
-## Repository Structure
-
-```
-.
-├── firmware/
-│   ├── Arduino source
-│   ├── Edge Impulse model
-│   └── LoRaWAN implementation
-│
-├── server/
-│   ├── MQTT subscriber
-│   ├── Payload decoder
-│   └── Data storage
-│
-├── enclosure/
-│   ├── STL files
-│   └── CAD models
-│
-├── datasets/
-│
-├── images/
-│
-└── README.md
-```
-
----
-
 ## Technologies Used
 
 - Arduino
-- C++
+- C
 - Python
 - Edge Impulse
 - LoRaWAN
@@ -197,9 +167,7 @@ The prototype was evaluated in several areas:
 - Acoustic impact of enclosure
 - Embedded classification performance
 - LoRaWAN transmission reliability
-- Battery operation
-- Outdoor deployment feasibility
-
+  
 ---
 
 ## Privacy
