@@ -4,7 +4,7 @@
 #include "hardware/irq.h"
 
 // ===== USER CONFIG =====
-#define MIC_PIN        A0
+#define MIC_PIN        A2
 #define SAMPLE_RATE    16000
 #define RECORD_SECONDS 5
 #define TOTAL_SAMPLES  (SAMPLE_RATE * RECORD_SECONDS)
