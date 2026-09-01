@@ -10,7 +10,7 @@ appends every classification result the board prints to a real .csv file.
 
 Usage:
     pip install pyserial
-    python serial_csv_logger.py --port /dev/ttyACM0 --baud 115200 --out waynescoffee.csv
+    python serial_csv_logger.py --port COM4 --baud 115200 --out construction.csv
 
 On Windows, --port will look like "COM5" instead of "/dev/ttyACM0".
 On macOS, it usually looks like "/dev/cu.usbmodemXXXX".
